@@ -1,0 +1,16 @@
+{
+  "name": "pump-fee-tracker",
+  "version": "1.0.0",
+  "description": "Real-time pump.fun creator fee claim tracker with Telegram notifications",
+  "main": "tracker.js",
+  "type": "module",
+  "scripts": {
+    "start": "node tracker.js",
+    "dev": "node --watch tracker.js"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.98.0",
+    "dotenv": "^16.4.5",
+    "node-fetch": "^3.3.2"
+  }
+}

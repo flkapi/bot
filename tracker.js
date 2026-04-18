@@ -38,11 +38,17 @@ const WALLETS_FILE = "./wallets.json";
 const PUMP_PROGRAM_IDS = new Set([
   "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P", // Bonding curve
   "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA", // PumpSwap AMM
+  "FEEhPbKVKnco9EXnaY3i4R5rQVUx91wgVfu8qokixywi", // BAGS
 ]);
 
 // Match any log containing "reatorFee" — covers all known variants:
 //   "DistributeCreatorFees", "Distribute_creator_fees", "TransferCreatorFeesToPump"
-const FEE_LOG_SIGNATURE = "reatorFee";
+const FEE_LOG_SIGNATURES = [
+  "claim_trading_fee",       // bags
+  "DistributeCreatorFees",   // pump
+  "TransferCreatorFeesToPump", // pump
+  "ClaimSocialFeePda",       // pump
+];
 
 // ─── Wallet Storage ─────────────────────────────────────────────────────────
 // wallets.json format: [ { address, name }, ... ]
@@ -149,7 +155,7 @@ async function detectFeeClaim(tx, connection) {
   const txLogs = tx.meta?.logMessages || [];
 
   const involvesPump = accounts.some(a => PUMP_PROGRAM_IDS.has(a));
-  const hasFeeLog = txLogs.some(l => l.includes(FEE_LOG_SIGNATURE));
+const hasFeeLog = txLogs.some(l => FEE_LOG_SIGNATURES.some(sig => l.includes(sig)));
 
   if (involvesPump && hasFeeLog) {
     return await extractTokenCA(tx, connection);
@@ -170,7 +176,7 @@ function subscribeWallet(wallet, connection) {
     async ({ signature, err, logs }) => {
       if (err) return;
 
-      const mightBeClaim = logs.some(l => l.includes(FEE_LOG_SIGNATURE));
+      const mightBeClaim = logs.some(l => FEE_LOG_SIGNATURES.some(sig => l.includes(sig)));
       if (!mightBeClaim) return;
 
       try {
